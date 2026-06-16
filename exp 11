@@ -1,0 +1,68 @@
+def is_consistent(region, color, assignment, constraints):
+    # Check all already-assigned regions
+    for assigned_region, assigned_color in assignment.items():
+        if assigned_color == color:
+            # If the regions are neighbors, same color is not allowed
+            if (assigned_region in constraints.get(region, []) or
+                region in constraints.get(assigned_region, [])):
+                return False
+    return True
+
+
+def backtrack(regions, domains, constraints, assignment=None):
+    if assignment is None:
+        assignment = {}
+
+    # Goal test
+    if len(assignment) == len(regions):
+        return assignment.copy()
+
+    # Select an unassigned region
+    region = next(r for r in regions if r not in assignment)
+
+    # Try each color
+    for color in domains[region]:
+        if is_consistent(region, color, assignment, constraints):
+            assignment[region] = color
+
+            result = backtrack(regions, domains, constraints, assignment)
+
+            if result is not None:
+                return result
+
+            # Backtrack
+            del assignment[region]
+
+    return None
+
+
+regions = ['WA', 'NT', 'SA', 'Q', 'NSW', 'V', 'T']
+
+domains = {
+    'WA': ['red', 'green', 'blue'],
+    'NT': ['red', 'green', 'blue'],
+    'SA': ['red', 'green', 'blue'],
+    'Q': ['red', 'green', 'blue'],
+    'NSW': ['red', 'green', 'blue'],
+    'V': ['red', 'green', 'blue'],
+    'T': ['red', 'green', 'blue']
+}
+
+constraints = {
+    'WA': ['NT', 'SA'],
+    'NT': ['WA', 'SA', 'Q'],
+    'SA': ['WA', 'NT', 'Q', 'NSW', 'V'],
+    'Q': ['NT', 'SA', 'NSW'],
+    'NSW': ['SA', 'Q', 'V'],
+    'V': ['SA', 'NSW'],
+    'T': []
+}
+
+result = backtrack(regions, domains, constraints)
+
+if result:
+    print("Coloring:")
+    for region in regions:
+        print(f"{region}: {result[region]}")
+else:
+    print("No solution found.")
