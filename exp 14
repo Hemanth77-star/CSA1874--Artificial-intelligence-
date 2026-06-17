@@ -1,21 +1,67 @@
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+def alpha_beta(node, depth, alpha, beta, is_max):
+    if depth == 0 or not node.children:
+        return node.val
 
-iris = load_iris()
+    if is_max:
+        value = float('-inf')
 
-X_train, X_test, y_train, y_test = train_test_split(
-    iris.data,
-    iris.target,
-    test_size=0.3,
-    random_state=42
+        for child in node.children:
+            value = max(
+                value,
+                alpha_beta(child, depth - 1, alpha, beta, False)
+            )
+
+            alpha = max(alpha, value)
+
+            if beta <= alpha:
+                break   # Beta cut-off
+
+        return value
+
+    else:
+        value = float('inf')
+
+        for child in node.children:
+            value = min(
+                value,
+                alpha_beta(child, depth - 1, alpha, beta, True)
+            )
+
+            beta = min(beta, value)
+
+            if beta <= alpha:
+                break   # Alpha cut-off
+
+        return value
+
+
+class Node:
+    def __init__(self, val, children=None):
+        self.val = val
+        self.children = children or []
+
+
+root = Node(0, [
+    Node(0, [
+        Node(3),
+        Node(5)
+    ]),
+    Node(0, [
+        Node(2),
+        Node(9)
+    ]),
+    Node(0, [
+        Node(12),
+        Node(5)
+    ])
+])
+
+result = alpha_beta(
+    root,
+    2,
+    float('-inf'),
+    float('inf'),
+    True
 )
 
-clf = DecisionTreeClassifier(random_state=42)
-
-clf.fit(X_train, y_train)
-
-y_pred = clf.predict(X_test)
-
-print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Optimal value with Alpha-Beta pruning:", result)
